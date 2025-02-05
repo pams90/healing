@@ -6,36 +6,33 @@ from scipy.io.wavfile import write
 SAMPLE_RATE = 44100
 MAX_DURATION_MINUTES = 120
 
-def generate_binaural_beat(base_freq, delta_freq, duration, amplitude=0.1):
+def generate_signal(signal_type, base_freq, secondary_freq, duration, amplitude=0.1):
     t = np.linspace(0, duration, int(SAMPLE_RATE * duration))
-    left = amplitude * np.sin(2 * np.pi * base_freq * t)
-    right = amplitude * np.sin(2 * np.pi * (base_freq + delta_freq) * t)
-    return np.column_stack((left, right))
-
-def generate_isochronic(base_freq, beat_freq, duration, amplitude=0.3):
-    t = np.linspace(0, duration, int(SAMPLE_RATE * duration))
-    carrier = np.sin(2 * np.pi * base_freq * t)
-    mod = (np.sin(2 * np.pi * beat_freq * t) > 0).astype(float)
-    signal = amplitude * carrier * mod
-    return np.column_stack((signal, signal))
-
-def generate_choir(duration, base_freq=220.0, amplitude=0.2):
-    t = np.linspace(0, duration, int(SAMPLE_RATE * duration))
-    voices = []
-    for i in range(8):
-        freq = base_freq * (i + 1) * 0.5
-        detune = 1 + (np.random.rand() * 0.02 - 0.01)
-        vib_depth = 0.5 + i * 0.1
-        vib_rate = 5 + i * 0.5
-        vib = np.sin(2 * np.pi * vib_rate * t) * vib_depth
-        env = np.linspace(0.8, 0.2, len(t))
-        voice = (amplitude * 0.5 * env * 
-                (np.sin(2 * np.pi * (freq * detune + vib) * t) +
-                 0.3 * np.sin(2 * np.pi * 2 * (freq * detune + vib) * t) +
-                 0.1 * np.sin(2 * np.pi * 3 * (freq * detune + vib) * t)))
-        voices.append(voice)
-    signal = np.sum(voices, axis=0)
-    return np.column_stack((signal * 0.8, signal * 0.8))
+    if signal_type == "binaural":
+        left = amplitude * np.sin(2 * np.pi * base_freq * t)
+        right = amplitude * np.sin(2 * np.pi * (base_freq + secondary_freq) * t)
+        return np.column_stack((left, right))
+    elif signal_type == "isochronic":
+        carrier = np.sin(2 * np.pi * base_freq * t)
+        mod = (np.sin(2 * np.pi * secondary_freq * t) > 0).astype(float)
+        signal = amplitude * carrier * mod
+        return np.column_stack((signal, signal))
+    elif signal_type == "choir":
+        voices = []
+        for i in range(8):
+            freq = base_freq * (i + 1) * 0.5
+            detune = 1 + (np.random.rand() * 0.02 - 0.01)
+            vib_depth = 0.5 + i * 0.1
+            vib_rate = 5 + i * 0.5
+            vib = np.sin(2 * np.pi * vib_rate * t) * vib_depth
+            env = np.linspace(0.8, 0.2, len(t))
+            voice = (amplitude * 0.5 * env * 
+                    (np.sin(2 * np.pi * (freq * detune + vib) * t) +
+                     0.3 * np.sin(2 * np.pi * 2 * (freq * detune + vib) * t) +
+                     0.1 * np.sin(2 * np.pi * 3 * (freq * detune + vib) * t)))
+            voices.append(voice)
+        signal = np.sum(voices, axis=0)
+        return np.column_stack((signal * 0.8, signal * 0.8))
 
 def create_audio_file(signal):
     audio_bytes = BytesIO()
@@ -80,12 +77,12 @@ if st.button("✨ Generate Audio"):
     with st.spinner(f"Generating {duration} minute audio..."):
         try:
             config = PRESETS[preset] if PRESETS[preset]["type"] != "custom" else {"type": custom_type, "base": base_freq}
-            if config["type"] == "choir":
-                signal = generate_choir(duration_seconds, base_freq=config["base"])
-            elif config["type"] == "binaural":
-                signal = generate_binaural_beat(config["base"], delta_freq, duration_seconds)
+            signal_type = config["type"]
+            if signal_type == "choir":
+                signal = generate_signal(signal_type, config["base"], None, duration_seconds)
             else:
-                signal = generate_isochronic(config["base"], beat_freq, duration_seconds)
+                secondary_freq = config.get("delta") or config.get("beat")
+                signal = generate_signal(signal_type, config["base"], secondary_freq, duration_seconds)
             audio_bytes = create_audio_file(signal)
             st.audio(audio_bytes, format="audio/wav")
             st.download_button(label="⬇️ Download WAV File", data=audio_bytes, file_name=f"healing_{preset.replace(' ', '_')}.wav", mime="audio/wav")
