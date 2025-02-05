@@ -1,11 +1,3 @@
-### Issues in the Existing Code
-1. The try-except block is not properly integrated, leading to potential issues in error handling.
-2. Unused variable `APP_VERSION` and redundant clearing of caches at the beginning.
-3. Some code sections can be more concise without losing functionality.
-
-### Simplified Code
-
-```python
 import numpy as np
 import streamlit as st
 from io import BytesIO
@@ -33,8 +25,8 @@ def generate_choir(duration, base_freq=220.0, amplitude=0.2):
     for i in range(8):
         freq = base_freq * (i + 1) * 0.5
         detune = 1 + (np.random.rand() * 0.02 - 0.01)
-        vib_depth = 0.5 + i*0.1
-        vib_rate = 5 + i*0.5
+        vib_depth = 0.5 + i * 0.1
+        vib_rate = 5 + i * 0.5
         vib = np.sin(2 * np.pi * vib_rate * t) * vib_depth
         env = np.linspace(0.8, 0.2, len(t))
         voice = (amplitude * 0.5 * env * 
@@ -115,4 +107,3 @@ with st.expander("ℹ️ Usage Instructions"):
     - Keep volume at comfortable levels
     - Combine with meditation practices
     """)
-```
