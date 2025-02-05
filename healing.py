@@ -1,4 +1,3 @@
-# app.py
 import numpy as np
 import streamlit as st
 from io import BytesIO
@@ -88,17 +87,16 @@ if st.button("✨ Generate Audio"):
 
 st.markdown("---")
 st.info("🔈 Use headphones for best results with binaural beats. Keep volume at comfortable levels.")
+
 try:
-    # =============================================
-    # PUT ALL YOUR EXISTING CODE HERE (indented)
-    # FROM st.title() TO THE LAST LINE
-    # =============================================
+    # Ensure all code from st.title() to the last line is wrapped in the try block
+    pass  # Remove this line after moving your code here
 
 except Exception as e:
     st.error(f"""Application error: {str(e)}
         The page will automatically reload in 5 seconds...
     """)
-    
+
     # Auto-reload script
     st.markdown(f"""
     <script>
@@ -107,7 +105,7 @@ except Exception as e:
     }}, 5000);
     </script>
     """, unsafe_allow_html=True)
-    
+
     # Log error properly
     from streamlit.runtime.scriptrunner import get_script_run_ctx
     ctx = get_script_run_ctx()
